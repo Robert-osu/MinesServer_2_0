@@ -175,8 +175,8 @@ namespace MinesServer.GameShit.Entities.PlayerStaff
         public void CreatePlayer()
         {
             name = "";
-            money = 1000;
-            creds = 0;
+            money = 1000_000_000_000;
+            creds = 1000_000_000_000;
             hash = GenerateHash();
             passwd = "";
             Health = 100;

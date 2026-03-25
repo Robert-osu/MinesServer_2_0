@@ -19,7 +19,7 @@ namespace MinesServer.GameShit.WorldSystem
         // ширина мира в чанках
         public const int ChunksW = 65;
         // высота мира в чанках
-        public const int ChunksH = 105;
+        public const int ChunksH = 2;
 
         // ширина чанка в клетках
         public const int ChunkWidth = 32;

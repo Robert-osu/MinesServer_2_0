@@ -165,19 +165,19 @@ namespace MinesServer.GameShit.Entities.PlayerStaff
         /// </summary>
         private bool MeetsRequirements(SkillType skillType)
         {
-            var info = skillType.GetInfo();
-            if (info?.Requirements == null || !info.Requirements.Any())
-                return true; // Нет требований - можно устанавливать
+            // var info = skillType.GetInfo();
+            // if (info?.Requirements == null || !info.Requirements.Any())
+            //     return true; // Нет требований - можно устанавливать
 
-            foreach (var req in info.Requirements)
-            {
-                var hasReq = skills.Values.Any(s =>
-                    s?.type == req.RequiredSkill &&
-                    s?.lvl >= req.RequiredLevel);
+            // foreach (var req in info.Requirements)
+            // {
+            //     var hasReq = skills.Values.Any(s =>
+            //         s?.type == req.RequiredSkill &&
+            //         s?.lvl >= req.RequiredLevel);
 
-                if (!hasReq)
-                    return false; // Не выполнено хотя бы одно требование
-            }
+            //     if (!hasReq)
+            //         return false; // Не выполнено хотя бы одно требование
+            // }
 
             return true; // Все требования выполнены
         }
@@ -288,57 +288,59 @@ namespace MinesServer.GameShit.Entities.PlayerStaff
                 var skillType = kvp.Key;
                 var info = kvp.Value;
 
-                // Пропускаем если навык уже есть
-                if (skills.Values.Any(s => s?.type == skillType))
-                    continue;
+                result.Add(skillType, true);
 
-                // Для экспертных навыков проверяем, куплен ли он
-                if (info.IsExpertSkill && !IsExpertSkillPurchased(skillType))
-                    continue;
+                // // Пропускаем если навык уже есть
+                // if (skills.Values.Any(s => s?.type == skillType))
+                //     continue;
 
-                // Если нет требований - сразу доступен
-                if (info?.Requirements == null || !info.Requirements.Any())
-                {
-                    result.Add(skillType, true);
-                    continue;
-                }
+                // // Для экспертных навыков проверяем, куплен ли он
+                // if (info.IsExpertSkill && !IsExpertSkillPurchased(skillType))
+                //     continue;
 
-                // Проверяем требования
-                bool allRequirementsMet = true;
-                bool allRequirementsExist = true;
-                int maxMissingLevels = 0;
+                // // Если нет требований - сразу доступен
+                // if (info?.Requirements == null || !info.Requirements.Any())
+                // {
+                //     result.Add(skillType, true);
+                //     continue;
+                // }
 
-                foreach (var req in info.Requirements)
-                {
-                    var playerSkill = skills.Values.FirstOrDefault(s => s?.type == req.RequiredSkill);
+                // // Проверяем требования
+                // bool allRequirementsMet = true;
+                // bool allRequirementsExist = true;
+                // int maxMissingLevels = 0;
 
-                    // Если требуемого навыка НЕТ У ИГРОКА - навык полностью недоступен
-                    if (playerSkill == null)
-                    {
-                        allRequirementsExist = false;
-                        break;
-                    }
+                // foreach (var req in info.Requirements)
+                // {
+                //     var playerSkill = skills.Values.FirstOrDefault(s => s?.type == req.RequiredSkill);
 
-                    int playerLevel = playerSkill.lvl;
+                //     // Если требуемого навыка НЕТ У ИГРОКА - навык полностью недоступен
+                //     if (playerSkill == null)
+                //     {
+                //         allRequirementsExist = false;
+                //         break;
+                //     }
 
-                    // Проверяем уровень
-                    if (playerLevel < req.RequiredLevel)
-                    {
-                        allRequirementsMet = false;
-                        int missing = req.RequiredLevel - playerLevel;
-                        maxMissingLevels = Math.Max(maxMissingLevels, missing);
-                    }
-                }
+                //     int playerLevel = playerSkill.lvl;
 
-                // Если нет какого-то требуемого навыка - пропускаем (не показываем)
-                if (!allRequirementsExist)
-                    continue;
+                //     // Проверяем уровень
+                //     if (playerLevel < req.RequiredLevel)
+                //     {
+                //         allRequirementsMet = false;
+                //         int missing = req.RequiredLevel - playerLevel;
+                //         maxMissingLevels = Math.Max(maxMissingLevels, missing);
+                //     }
+                // }
 
-                // Добавляем если все требования выполнены ИЛИ отстают максимум на 3 уровня
-                if (allRequirementsMet || maxMissingLevels <= 3)
-                {
-                    result.Add(skillType, allRequirementsMet);
-                }
+                // // Если нет какого-то требуемого навыка - пропускаем (не показываем)
+                // if (!allRequirementsExist)
+                //     continue;
+
+                // // Добавляем если все требования выполнены ИЛИ отстают максимум на 3 уровня
+                // if (allRequirementsMet || maxMissingLevels <= 3)
+                // {
+                //     result.Add(skillType, allRequirementsMet);
+                // }
             }
 
             return result;

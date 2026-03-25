@@ -36,7 +36,7 @@ namespace MinesServer.GameShit.Programmator
         {
             Dictionary<string, PFunction> functions = new();
             functions[""] = new PFunction();
-            string currentFunc = "";
+            string name_current_f = "";
 
             byte[] array = SevenZipHelper.Decompress(Convert.FromBase64String(data)); // наша программа в виде массива байтов
             int commands_size = BitConverter.ToInt32(array, 0); // количество команд в программе
@@ -75,6 +75,11 @@ namespace MinesServer.GameShit.Programmator
 
                 if (CommandExtensions.NO_ARGS.Contains(action_type))
                 {
+                    if (action_type == Command.EMPTY)
+                    {
+                        i_column++;
+                        continue;
+                    }
                     // Обработка NextRow до добавления команды
                     if (action_type == Command.NEWLINE)
                     {
@@ -84,7 +89,7 @@ namespace MinesServer.GameShit.Programmator
                         continue; // Пропускаем добавление команды
                     }
 
-                    functions[currentFunc] += new PAction(atype);
+                    functions[name_current_f] += new PAction(atype);
                 } 
                 else if (CommandExtensions.ONE_ARGS.Contains(action_type))
                 {
@@ -92,18 +97,18 @@ namespace MinesServer.GameShit.Programmator
                     {
                         // TODO: логика перехода GOTO
                     }
-                    functions[currentFunc] += new PAction(atype, label_name);
+                    functions[name_current_f] += new PAction(atype, label_name);
                 }
                 else if (CommandExtensions.TWO_ARGS.Contains(action_type))
                 {
-                    functions[currentFunc] += new PAction(atype, label_name, label_name2);
+                    functions[name_current_f] += new PAction(atype, label_name, label_name2);
                 }
                 else
                 {
                     if (atype != ActionType.None)
                         {
                             Console.WriteLine($"Unknown action ID: {c_byte}");
-                            functions[currentFunc] += new PAction(atype);
+                            functions[name_current_f] += new PAction(atype);
                         }
                 }
 
@@ -114,6 +119,10 @@ namespace MinesServer.GameShit.Programmator
                     if (have_next_row)
                     {
                         have_next_row = false;
+                    }
+                    else
+                    {
+                        return functions;
                     }
                     i_column = 0;
                 }

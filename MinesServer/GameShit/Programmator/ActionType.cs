@@ -318,6 +318,7 @@ namespace MinesServer.GameShit.Programmator
         
         // Группировки общей тематики
         public static readonly HashSet<Command> ACTION = new HashSet<Command>();
+        public static readonly HashSet<Command> UNION_GOTO = new HashSet<Command>();
         
         static CommandExtensions()
         {
@@ -359,6 +360,21 @@ namespace MinesServer.GameShit.Programmator
                 Command.BOX_RED, Command.BOX_VIOLET, Command.USE_BOOM, Command.USE_C190,
                 Command.USE_GEOPACK, Command.USE_NANOBOT, Command.USE_POLIMER, Command.USE_PROTON,
                 Command.USE_RAZRYAD, Command.USE_REMBOT, Command.USE_ZZ
+            });
+
+            UNION_GOTO.UnionWith(new[]
+            {   // TODO: доделать список переходов GOTO
+                Command.GO_TO, Command.MOVE_LEFT, Command.MOVE_RIGHT, Command.MOVE_TOP,
+                // Command.REPEAT, Command.MOVE_FORWARD, Command.DIR_BOTTOM, Command.DIR_TOP,
+                // Command.DIR_LEFT, Command.DIR_RIGHT, Command.DIR_INV_BOTTOM, Command.DIR_INV_LEFT,
+                // Command.DIR_INV_RIGHT, Command.DIR_INV_TOP, Command.DIR_RANDOM, Command.ROTATE_LEFT,
+                // Command.ROTATE_RIGHT, Command.BUILD_BLOCK, Command.BUILD_QUADRO, Command.BUILD_ROAD,
+                // Command.BUILD_WB, Command.GEO, Command.HEAL, Command.STD_BUILD, Command.STD_DIG,
+                // Command.STD_DIG_AROUND, Command.STD_HEAL, Command.BOX_ALL, Command.BOX_BLUE,
+                // Command.BOX_WHITE, Command.BOX_CYAN, Command.BOX_GREEN, Command.BOX_HALF,
+                // Command.BOX_RED, Command.BOX_VIOLET, Command.USE_BOOM, Command.USE_C190,
+                // Command.USE_GEOPACK, Command.USE_NANOBOT, Command.USE_POLIMER, Command.USE_PROTON,
+                // Command.USE_RAZRYAD, Command.USE_REMBOT, Command.USE_ZZ
             });
         }
         

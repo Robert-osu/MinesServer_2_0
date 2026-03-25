@@ -3,11 +3,14 @@ using MinesServer.GameShit.Programmator.SevenZip.LZMA;
 using System.Diagnostics;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
+using MinesServer.GameShit.Programmator;
 
 namespace MinesServer.GameShit.Programmator
 {
     public class Program
     {
+        private const int MaxActionsBytesSize = 4; // выделено 4 байта на определение количества команд (не изменять)
+        private const int MaxActionsPerRow = 16; // максимальное количество команд в одной строке (не изменять)
         private Program()
         {
 
@@ -34,240 +37,85 @@ namespace MinesServer.GameShit.Programmator
             Dictionary<string, PFunction> functions = new();
             functions[""] = new PFunction();
             string currentFunc = "";
-            byte[] array = SevenZipHelper.Decompress(Convert.FromBase64String(data));
-            int num = BitConverter.ToInt32(array, 0);
-            var array2 = Encoding.UTF8.GetString(array, num + 4, array.Length - num - 4).Split(':');
-            bool containsnextrow = false;
-            int index = 0;
-            for (int i = 0; i < num; i++)
+
+            byte[] array = SevenZipHelper.Decompress(Convert.FromBase64String(data)); // наша программа в виде массива байтов
+            int commands_size = BitConverter.ToInt32(array, 0); // количество команд в программе
+
+            // labels_array - содержит массив значений команд, либо два значения, если передаются как "WWW@10"
+            var start_byte = commands_size + MaxActionsBytesSize; // сдвиг
+            var end_byte = array.Length - start_byte;
+            var labels_array = Encoding.UTF8.GetString(array, start_byte, end_byte).Split(':');
+
+            bool have_next_row = false; // есть ли переход на новую строку
+            int i_column = 0;
+            for (int i = 0; i < commands_size; i++)
             {
-                var atype = GetActionType(Convert.ToInt16(array[i + 4]));
-                //Console.WriteLine(atype);
-                var name = "0";
-                var number = 0;
-                if (array2.Length > i)
+                var c_byte = Convert.ToInt16(array[i + 4]); // два байта? что?
+                var action_type = CommandExtensions.GetByIndex(c_byte);
+                var atype = GetActionType(c_byte); // для совместимости (удалить)
+
+                var label_name = "0";
+                var label_name2 = 0; // TODO: делать ли из целочисленного - строку?
+                if (labels_array.Length > i)
                 {
-                    if (array2[i].Contains('@'))
+                    if (labels_array[i].Contains('@'))
                     {
-                        var a3 = array2[i].Split('@');
-                        name = a3[0];
-                        if (int.TryParse(a3[1], out var n))
-                            number = n;
+                        var values = labels_array[i].Split('@');
+                        label_name = values[0];
+                        if (int.TryParse(values[1], out var value))
+                            label_name2 = value;
                     }
                     else
-                        name = array2[i];
+                        label_name = labels_array[i];
                 }
 
-                // Обработка NextRow до добавления команды
-                if (atype == ActionType.NextRow)
+                
+
+                
+
+                if (CommandExtensions.NO_ARGS.Contains(action_type))
                 {
-                    containsnextrow = true;
-                    // Сбрасываем счетчик строки
-                    index = 0;
-                    continue; // Пропускаем добавление команды
+                    // Обработка NextRow до добавления команды
+                    if (action_type == Command.NEWLINE)
+                    {
+                        have_next_row = true;
+                        // Сбрасываем счетчик строки
+                        i_column = 0;
+                        continue; // Пропускаем добавление команды
+                    }
+
+                    functions[currentFunc] += new PAction(atype);
+                } 
+                else if (CommandExtensions.ONE_ARGS.Contains(action_type))
+                {
+                    if (CommandExtensions.UNION_GOTO.Contains(action_type))
+                    {
+                        // TODO: логика перехода GOTO
+                    }
+                    functions[currentFunc] += new PAction(atype, label_name);
                 }
-
-                // Добавляем команду в текущую функцию
-                switch (atype)
+                else if (CommandExtensions.TWO_ARGS.Contains(action_type))
                 {
-                    // Управление потоком
-                    case ActionType.CreateFunction:
-                        functions.Add(name, new PFunction());
-                        currentFunc = name;
-                        index = 0;
-                        break;
-
-                    case ActionType.GoTo:
-                    case ActionType.RunSub:
-                    case ActionType.RunFunction:
-                    case ActionType.RunState:
-                    case ActionType.RunIfFalse:
-                    case ActionType.RunIfTrue:
-                    case ActionType.RunOnRespawn:
-                    case ActionType.Return:
-                    case ActionType.ReturnFunction:
-                    case ActionType.ReturnState:
-                    case ActionType.Restart:
-                        functions[currentFunc] += new PAction(atype, name);
-                        break;
-
-                    // Команды с меткой и числовым параметром
-                    case ActionType.WritableState:
-                    case ActionType.WritableStateLower:
-                    case ActionType.WritableStateMore:
-                        functions[currentFunc] += new PAction(atype, name, number);
-                        break;
-
-                    // Команды с числовым параметром
-                    case ActionType.IsHpLower100:
-                    case ActionType.IsHpLower50:
-                        functions[currentFunc] += new PAction(atype, number);
-                        break;
-
-                    // Команды проверки состояния (без параметров)
-                    case ActionType.IsNotEmpty:
-                    case ActionType.IsEmpty:
-                    case ActionType.IsFalling:
-                    case ActionType.IsCrystal:
-                    case ActionType.IsLivingCrystal:
-                    case ActionType.IsBoulder:
-                    case ActionType.IsSand:
-                    case ActionType.IsBreakableRock:
-                    case ActionType.IsUnbreakable:
-                    case ActionType.IsRedRock:
-                    case ActionType.IsBlackRock:
-                    case ActionType.IsAcid:
-                    case ActionType.IsQuadBlock:
-                    case ActionType.IsRoad:
-                    case ActionType.IsRedBlock:
-                    case ActionType.IsYellowBlock:
-                    case ActionType.IsBox:
-                    case ActionType.IsPillar:
-                    case ActionType.IsGreenBlock:
-                    case ActionType.CheckGun:
-                        functions[currentFunc] += new PAction(atype);
-                        break;
-
-                    // Команды перемещения и вращения
-                    case ActionType.MoveUp:
-                    case ActionType.MoveLeft:
-                    case ActionType.MoveDown:
-                    case ActionType.MoveRight:
-                    case ActionType.MoveForward:
-                    case ActionType.RotateUp:
-                    case ActionType.RotateLeft:
-                    case ActionType.RotateDown:
-                    case ActionType.RotateRight:
-                    case ActionType.RotateLeftRelative:
-                    case ActionType.RotateRightRelative:
-                    case ActionType.RotateRandom:
-                        functions[currentFunc] += new PAction(atype);
-                        break;
-
-                    // Команды проверки направления
-                    case ActionType.CheckUp:
-                    case ActionType.CheckLeft:
-                    case ActionType.CheckDown:
-                    case ActionType.CheckRight:
-                    case ActionType.CheckForward:
-                    case ActionType.CheckUpLeft:
-                    case ActionType.CheckUpRight:
-                    case ActionType.CheckDownLeft:
-                    case ActionType.CheckDownRight:
-                    case ActionType.CheckForwardLeft:
-                    case ActionType.CheckForwardRight:
-                        functions[currentFunc] += new PAction(atype);
-                        break;
-
-                    // Команды сдвига
-                    case ActionType.ShiftUp:
-                    case ActionType.ShiftLeft:
-                    case ActionType.ShiftDown:
-                    case ActionType.ShiftRight:
-                    case ActionType.ShiftForward:
-                        functions[currentFunc] += new PAction(atype);
-                        break;
-
-                    // Логические операторы
-                    case ActionType.Or:
-                    case ActionType.And:
-                        functions[currentFunc] += new PAction(atype);
-                        break;
-
-                    // Действия
-                    case ActionType.Dig:
-                    case ActionType.BuildBlock:
-                    case ActionType.Geology:
-                    case ActionType.BuildRoad:
-                    case ActionType.Heal:
-                    case ActionType.BuildPillar:
-                    case ActionType.Beep:
-                        functions[currentFunc] += new PAction(atype);
-                        break;
-
-                    // Макросы
-                    case ActionType.MacrosDig:
-                    case ActionType.MacrosBuild:
-                    case ActionType.MacrosHeal:
-                    case ActionType.MacrosMine:
-                        functions[currentFunc] += new PAction(atype);
-                        break;
-
-                    // Специальные команды
-                    case ActionType.Flip:
-                    case ActionType.FillGun:
-                        functions[currentFunc] += new PAction(atype);
-                        break;
-
-                    // Режимы
-                    case ActionType.EnableAutoDig:
-                    case ActionType.DisableAutoDig:
-                    case ActionType.EnableAgression:
-                    case ActionType.DisableAgression:
-                    case ActionType.EnableHandMode:
-                    case ActionType.DisableHandMode:
-                        functions[currentFunc] += new PAction(atype);
-                        break;
-
-                    // Специальные действия
-                    case ActionType.BOOM:
-                    case ActionType.DISCHARGE:
-                    case ActionType.PROTON:
-                    case ActionType.VB:
-                    case ActionType.Geopack:
-                    case ActionType.ZZ:
-                    case ActionType.C190:
-                    case ActionType.Poly:
-                    case ActionType.Up:
-                    case ActionType.Craft:
-                    case ActionType.Nano:
-                    case ActionType.Rembot:
-                    case ActionType.InvDirUp:
-                    case ActionType.InvDirLeft:
-                    case ActionType.InvDirDown:
-                    case ActionType.InvDirRight:
-                        functions[currentFunc] += new PAction(atype);
-                        break;
-
-                    // Отладка
-                    case ActionType.DebugBreak:
-                    case ActionType.DebugSet:
-                        functions[currentFunc] += new PAction(atype, name);
-                        break;
-
-                    // Старт/Стоп
-                    case ActionType.Start:
-                    case ActionType.Stop:
-                    case ActionType.Last:
-                        functions[currentFunc] += new PAction(atype);
-                        break;
-
-                    // None или неизвестные команды
-                    case ActionType.None:
-                    default:
-                        if (atype != ActionType.None)
+                    functions[currentFunc] += new PAction(atype, label_name, label_name2);
+                }
+                else
+                {
+                    if (atype != ActionType.None)
                         {
-                            Console.WriteLine($"Unknown action ID: {Convert.ToInt16(array[i + 4])}");
+                            Console.WriteLine($"Unknown action ID: {c_byte}");
                             functions[currentFunc] += new PAction(atype);
                         }
-                        break;
                 }
 
-                index++;
+                i_column++;
 
-                // Проверяем, нужно ли обработать конец строки
-                if (index >= 15 && !containsnextrow)
+                if (i_column >= MaxActionsPerRow)
                 {
-                    // Если достигнут лимит строки и нет явного NextRow,
-                    // не вставляем автоматический GoTo, а просто сбрасываем счетчик
-                    index = 0;
-                }
-
-                // Если был NextRow, сбрасываем флаг после обработки строки
-                if (containsnextrow && index >= 15)
-                {
-                    containsnextrow = false;
-                    index = 0;
+                    if (have_next_row)
+                    {
+                        have_next_row = false;
+                    }
+                    i_column = 0;
                 }
             }
             return functions;

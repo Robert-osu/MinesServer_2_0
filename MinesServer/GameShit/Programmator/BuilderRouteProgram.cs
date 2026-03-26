@@ -17,6 +17,7 @@ namespace MinesServer.GameShit.Programmator
         private int _currentStepIndex = 0;  // Текущий шаг в маршруте
         private int _lastReturnedIndex = -1; // Последний возвращенный индекс
         private int _startStepIndex = 0;
+        private Stack<int> _returnPoints = new Stack<int>(); // Стек точек возврата из индексов шагов
 
         public void AddStep(int nextIndex)
         {
@@ -38,6 +39,14 @@ namespace MinesServer.GameShit.Programmator
             {
                 NextIndex = nextIndex,
                 ExternalMethod = externalMethod ?? (() => SetStartStepIndex(_steps.Count))
+            });
+        }
+        public void AddRecursiveStep(int nextIndex, int gotoIndex, Action externalMethod = null)
+        {
+            _steps.Add(new RouteStepWithMethod
+            {
+                NextIndex = gotoIndex,
+                ExternalMethod = externalMethod ?? (() => SetReturnStepIndex(nextIndex))
             });
         }
         
@@ -68,6 +77,24 @@ namespace MinesServer.GameShit.Programmator
         public void SetStartStepIndex(int index)
         {
             _startStepIndex = index;
+        }
+
+        public void SetReturnStepIndex(int index)
+        {
+            _returnPoints.Push(index);
+        }
+        public void AddReturnStepIndex()
+        {
+            if (_returnPoints.Count > 0)
+            {
+                var returnStepIndex = _returnPoints.Pop();
+                AddStep(returnStepIndex);
+            }
+            else
+            {
+                // ERROR: выполнение возврата функции вне функции
+                // TODO: реализовать ошибку с завершением работы программатора
+            }
         }
         
         public List<int> BuildRoute()

@@ -1,6 +1,6 @@
 # MinesServer_2_0
 
-Этот проект является форком (или модификацией) оригинального репозитория [MinesServer](https://github.com/SeiZzzzz/MinesServer ), созданного пользователем [SeiZzzzz](https://github.com/SeiZzzzz ).  
+Этот проект является форком (или модификацией) оригинального репозитория [MinesServer](https://github.com/SeiZzzzz/MinesServer ), созданного пользователями [Darkar25](https://github.com/Darkar25) [SeiZzzzz](https://github.com/SeiZzzzz ).  
 Оригинальный проект распространяется под лицензией MIT.
 
 ## Лицензия

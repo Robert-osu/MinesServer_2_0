@@ -10,7 +10,11 @@ namespace MinesServer.GameShit.Programmator
         * основные методы: 
         * - AddStep - добавить следующий индекс
         * - AddConditionalStep - добавить ветвление с условием
-        * - GetNextIndex - получить следующий индекс
+        * - AddStartStep - добавить следующий индекс, который станет точкой старта
+        * - AddRecursiveStep - добавить goto индекс, закинуть в стек следующий индекс
+        * - AddReturnStep - добавить индекс из стека
+        * ________________________________________________________________________________________
+        * - GetNextIndex - получить следующий индекс, реализуя все функции (точка старта, ветвление, рекурсия и тд)
         * - HasNext - 
         */
         private List<RouteStep> _steps = new List<RouteStep>();
@@ -49,6 +53,19 @@ namespace MinesServer.GameShit.Programmator
                 ExternalMethod = externalMethod ?? (() => SetReturnStepIndex(nextIndex))
             });
         }
+        public void AddReturnStep()
+        {
+            if (_returnPoints.Count > 0)
+            {
+                var returnStepIndex = _returnPoints.Pop();
+                AddStep(returnStepIndex);
+            }
+            else
+            {
+                // ERROR: выполнение возврата функции вне функции
+                // TODO: реализовать ошибку с завершением работы программатора
+            }
+        }
         
         public int GetNextIndex()
         {
@@ -74,28 +91,16 @@ namespace MinesServer.GameShit.Programmator
             _currentStepIndex = _startStepIndex;
         }
 
-        public void SetStartStepIndex(int index)
+        private void SetStartStepIndex(int index)
         {
             _startStepIndex = index;
         }
 
-        public void SetReturnStepIndex(int index)
+        private void SetReturnStepIndex(int index)
         {
             _returnPoints.Push(index);
         }
-        public void AddReturnStepIndex()
-        {
-            if (_returnPoints.Count > 0)
-            {
-                var returnStepIndex = _returnPoints.Pop();
-                AddStep(returnStepIndex);
-            }
-            else
-            {
-                // ERROR: выполнение возврата функции вне функции
-                // TODO: реализовать ошибку с завершением работы программатора
-            }
-        }
+        
         
         public List<int> BuildRoute()
         {

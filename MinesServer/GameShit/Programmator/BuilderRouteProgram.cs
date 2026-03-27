@@ -62,6 +62,7 @@ namespace MinesServer.GameShit.Programmator
             }
             else
             {
+                AddEndStep(); // заглушка, поменять
                 // ERROR: выполнение возврата функции вне функции
                 // TODO: реализовать ошибку с завершением работы программатора
             }

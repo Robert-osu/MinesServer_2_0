@@ -21,6 +21,8 @@ namespace MinesServer.GameShit.Programmator
         private int _currentStepIndex = 0;  // Текущий шаг в маршруте
         private int _lastReturnedIndex = -1; // Последний возвращенный индекс
         private int _startStepIndex = 0;
+
+        private int _deathStepIndex = -1;
         private Stack<int> _returnPoints = new Stack<int>(); // Стек точек возврата из индексов шагов
 
         public void AddStep(int nextIndex)
@@ -72,7 +74,14 @@ namespace MinesServer.GameShit.Programmator
             Reset();
             _steps.Add(new RouteStep { NextIndex = _startStepIndex });
         }
-        
+        public void AddDeathStep(int nextIndex, Action externalMethod = null)
+        {
+            _steps.Add(new RouteStepWithMethod
+            {
+                NextIndex = nextIndex,
+                ExternalMethod = externalMethod ?? (() => SetDeathStepIndex(_steps.Count))
+            });
+        }
         public void FixStep(int it, int nextIndex)
         {
             if (it < _steps.Count())
@@ -103,6 +112,10 @@ namespace MinesServer.GameShit.Programmator
         {
             return _lastReturnedIndex;
         }
+        public int getDeathIndex()
+        {
+            return _deathStepIndex;
+        }
         
         private bool HasNext()
         {
@@ -113,6 +126,10 @@ namespace MinesServer.GameShit.Programmator
         private void SetStartStepIndex(int index)
         {
             _startStepIndex = index;
+        }
+        private void SetDeathStepIndex(int index)
+        {
+            _deathStepIndex = index;
         }
 
         private void SetReturnStepIndex(int index)

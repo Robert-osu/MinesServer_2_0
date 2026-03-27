@@ -15,7 +15,7 @@ namespace MinesServer.GameShit.Programmator
         * - AddReturnStep - добавить индекс из стека
         * ________________________________________________________________________________________
         * - GetNextIndex - получить следующий индекс, реализуя все функции (точка старта, ветвление, рекурсия и тд)
-        * - HasNext - 
+        * - 
         */
         private List<RouteStep> _steps = new List<RouteStep>();
         private int _currentStepIndex = 0;  // Текущий шаг в маршруте
@@ -80,15 +80,20 @@ namespace MinesServer.GameShit.Programmator
             return nextIndex;
         }
         
-        public bool HasNext()
-        {
-            // Проверяем, остались ли еще шаги в маршруте
-            return _currentStepIndex < _steps.Count;
-        }
-        
         public void Reset()
         {
             _currentStepIndex = _startStepIndex;
+        }
+
+        public int getLastIndex()
+        {
+            return _lastReturnedIndex;
+        }
+        
+        private bool HasNext()
+        {
+            // Проверяем, остались ли еще шаги в маршруте
+            return _currentStepIndex < _steps.Count;
         }
 
         private void SetStartStepIndex(int index)
@@ -102,7 +107,7 @@ namespace MinesServer.GameShit.Programmator
         }
         
         
-        public List<int> BuildRoute()
+        private List<int> BuildRoute()
         {
             var route = new List<int>();
             Reset();

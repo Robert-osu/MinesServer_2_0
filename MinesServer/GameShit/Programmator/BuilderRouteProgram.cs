@@ -66,12 +66,20 @@ namespace MinesServer.GameShit.Programmator
                 // TODO: реализовать ошибку с завершением работы программатора
             }
         }
-        
         public void AddEndStep()
         {
             Reset();
             _steps.Add(new RouteStep { NextIndex = _startStepIndex });
         }
+        
+        public void FixStep(int it, int nextIndex)
+        {
+            if (it < _steps.Count())
+            {
+                _steps[it] = new RouteStep { NextIndex = nextIndex };
+            }
+        }
+        
         public int GetNextIndex()
         {
             if (!HasNext())

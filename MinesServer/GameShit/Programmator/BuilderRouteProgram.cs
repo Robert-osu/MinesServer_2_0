@@ -74,12 +74,12 @@ namespace MinesServer.GameShit.Programmator
             Reset();
             _steps.Add(new RouteStep { NextIndex = _startStepIndex });
         }
-        public void AddDeathStep(int nextIndex, Action externalMethod = null)
+        public void AddDeathStep(int nextIndex, int gotoIndex, Action externalMethod = null)
         {
             _steps.Add(new RouteStepWithMethod
             {
                 NextIndex = nextIndex,
-                ExternalMethod = externalMethod ?? (() => SetDeathStepIndex(_steps.Count))
+                ExternalMethod = externalMethod ?? (() => SetDeathStepIndex(gotoIndex))
             });
         }
         public void FixStep(int it, int nextIndex)

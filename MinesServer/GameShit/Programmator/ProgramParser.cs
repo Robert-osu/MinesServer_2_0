@@ -21,7 +21,7 @@ namespace MinesServer.GameShit.Programmator
         private byte[] actions;
         private string[] labels;
         private HashSet<int> processedIndexes = new();
-        public ProgramManager(Player P, string name, string data)
+        public ProgramParser(Player P, string name, string data)
         {
             this.owner = P;
             this.name = name;

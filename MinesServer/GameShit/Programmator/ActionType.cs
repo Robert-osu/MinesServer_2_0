@@ -315,10 +315,13 @@ namespace MinesServer.GameShit.Programmator
         public static readonly HashSet<Command> NO_ARGS = new HashSet<Command>();
         public static readonly HashSet<Command> ONE_ARGS = new HashSet<Command>();
         public static readonly HashSet<Command> TWO_ARGS = new HashSet<Command>();
+        public static readonly HashSet<Command> CONDITIONS = new HashSet<Command>();
+        public static readonly HashSet<Command> CHECKS = new HashSet<Command>();
+        public static readonly HashSet<Command> OFFSETS = new HashSet<Command>();
         
         // Группировки общей тематики
         public static readonly HashSet<Command> ACTION = new HashSet<Command>();
-        public static readonly HashSet<Command> UNION_GOTO = new HashSet<Command>();
+        // public static readonly HashSet<Command> UNION_GOTO = new HashSet<Command>();
         
         static CommandExtensions()
         {
@@ -340,11 +343,29 @@ namespace MinesServer.GameShit.Programmator
             {
                 (0x63, 0x67), (0x6C, 0x6F), (0x77, 0x7C), (0x80, 0x82)
             };
+
+            var conditionsRanges = new List<(int start, int end)>
+            {
+                (0x2B, 0x4F), 
+            };
+
+            var checksRanges = new List<(int start, int end)>
+            {
+                (0x1D, 0x25), (0x87, 0x87), (0x9C, 0x9D)
+            };
+
+            var offsetsRanges = new List<(int start, int end)>
+            {
+                (0x56, 0x58), (0x83, 0x86), (0x88, 0x88)
+            };
             
             // Заполняем группы
             NO_ARGS.UnionWith(GetCommandsInRanges(noArgsRanges));
             ONE_ARGS.UnionWith(GetCommandsInRanges(oneArgRanges));
             TWO_ARGS.UnionWith(GetCommandsInRanges(twoArgsRanges));
+            CONDITIONS.UnionWith(GetCommandsInRanges(conditionsRanges));
+            CHECKS.UnionWith(GetCommandsInRanges(checksRanges));
+            OFFSETS.UnionWith(GetCommandsInRanges(offsetsRanges));
             
             // Заполняем ACTION группу
             ACTION.UnionWith(new[]
@@ -362,20 +383,11 @@ namespace MinesServer.GameShit.Programmator
                 Command.USE_RAZRYAD, Command.USE_REMBOT, Command.USE_ZZ
             });
 
-            UNION_GOTO.UnionWith(new[]
-            {   // TODO: доделать список переходов GOTO
-                Command.GO_TO, Command.MOVE_LEFT, Command.MOVE_RIGHT, Command.MOVE_TOP,
-                // Command.REPEAT, Command.MOVE_FORWARD, Command.DIR_BOTTOM, Command.DIR_TOP,
-                // Command.DIR_LEFT, Command.DIR_RIGHT, Command.DIR_INV_BOTTOM, Command.DIR_INV_LEFT,
-                // Command.DIR_INV_RIGHT, Command.DIR_INV_TOP, Command.DIR_RANDOM, Command.ROTATE_LEFT,
-                // Command.ROTATE_RIGHT, Command.BUILD_BLOCK, Command.BUILD_QUADRO, Command.BUILD_ROAD,
-                // Command.BUILD_WB, Command.GEO, Command.HEAL, Command.STD_BUILD, Command.STD_DIG,
-                // Command.STD_DIG_AROUND, Command.STD_HEAL, Command.BOX_ALL, Command.BOX_BLUE,
-                // Command.BOX_WHITE, Command.BOX_CYAN, Command.BOX_GREEN, Command.BOX_HALF,
-                // Command.BOX_RED, Command.BOX_VIOLET, Command.USE_BOOM, Command.USE_C190,
-                // Command.USE_GEOPACK, Command.USE_NANOBOT, Command.USE_POLIMER, Command.USE_PROTON,
-                // Command.USE_RAZRYAD, Command.USE_REMBOT, Command.USE_ZZ
-            });
+            // UNION_GOTO.UnionWith(new[]
+            // {   // TODO: доделать список переходов GOTO
+            //     Command.GO_TO, Command.RESPAWN_TO, 
+            //     // Command.CALL_FUNC, Command.CALL_FUNC_CONDITION, Command.CALL_FUNC_STATE - скорее всего не сюда
+            // });
         }
         
         private static IEnumerable<Command> GetCommandsInRanges(List<(int start, int end)> ranges)

@@ -305,8 +305,8 @@ namespace MinesServer.GameShit.Programmator
         DIR_INV_RIGHT = 0xB2,
         MODE_MANUAL = 0xB3,
         MODE_AUTO = 0xB4,
-        I_DONT_KNOW4 = 0xB5,
-        I_DONT_KNOW5 = 0xB6
+        DEBUG_BREAK = 0xB5,
+        DEBUG_SET = 0xB6
     }
 
     public static class CommandExtensions
@@ -318,9 +318,10 @@ namespace MinesServer.GameShit.Programmator
         public static readonly HashSet<Command> CONDITIONS = new HashSet<Command>();
         public static readonly HashSet<Command> CHECKS = new HashSet<Command>();
         public static readonly HashSet<Command> OFFSETS = new HashSet<Command>();
+        public static readonly HashSet<Command> CONTROL_FLOW = new HashSet<Command>();
         
         // Группировки общей тематики
-        public static readonly HashSet<Command> ACTION = new HashSet<Command>();
+        public static readonly HashSet<Command> ACTIONS = new HashSet<Command>();
         // public static readonly HashSet<Command> UNION_GOTO = new HashSet<Command>();
         
         static CommandExtensions()
@@ -358,6 +359,11 @@ namespace MinesServer.GameShit.Programmator
             {
                 (0x56, 0x58), (0x83, 0x86), (0x88, 0x88)
             };
+
+            var actionsRanges = new List<(int start, int enf)>
+            {
+                (0x04, 0x17)
+            };
             
             // Заполняем группы
             NO_ARGS.UnionWith(GetCommandsInRanges(noArgsRanges));
@@ -366,22 +372,35 @@ namespace MinesServer.GameShit.Programmator
             CONDITIONS.UnionWith(GetCommandsInRanges(conditionsRanges));
             CHECKS.UnionWith(GetCommandsInRanges(checksRanges));
             OFFSETS.UnionWith(GetCommandsInRanges(offsetsRanges));
+            ACTIONS.UnionWith(GetCommandsInRanges(actionsRanges));
             
-            // Заполняем ACTION группу
-            ACTION.UnionWith(new[]
+            CONTROL_FLOW.UnionWith(new[]
             {
-                Command.MOVE_BOTTOM, Command.MOVE_LEFT, Command.MOVE_RIGHT, Command.MOVE_TOP,
-                Command.REPEAT, Command.MOVE_FORWARD, Command.DIR_BOTTOM, Command.DIR_TOP,
-                Command.DIR_LEFT, Command.DIR_RIGHT, Command.DIR_INV_BOTTOM, Command.DIR_INV_LEFT,
-                Command.DIR_INV_RIGHT, Command.DIR_INV_TOP, Command.DIR_RANDOM, Command.ROTATE_LEFT,
-                Command.ROTATE_RIGHT, Command.BUILD_BLOCK, Command.BUILD_QUADRO, Command.BUILD_ROAD,
-                Command.BUILD_WB, Command.GEO, Command.HEAL, Command.STD_BUILD, Command.STD_DIG,
-                Command.STD_DIG_AROUND, Command.STD_HEAL, Command.BOX_ALL, Command.BOX_BLUE,
-                Command.BOX_WHITE, Command.BOX_CYAN, Command.BOX_GREEN, Command.BOX_HALF,
-                Command.BOX_RED, Command.BOX_VIOLET, Command.USE_BOOM, Command.USE_C190,
-                Command.USE_GEOPACK, Command.USE_NANOBOT, Command.USE_POLIMER, Command.USE_PROTON,
-                Command.USE_RAZRYAD, Command.USE_REMBOT, Command.USE_ZZ
+                Command.NEWLINE, Command.GO_TO, Command.CALL_FUNC,
+                Command.CALL_FUNC_CONDITION, Command.CALL_FUNC_STATE,
+                Command.START, Command.RETURN,
+                Command.RETURN_ARGUMENT, Command.RETURN_STATE,
+                Command.YES_NO, Command.YES_NO_NEWLINE, Command.YES_NO_RETURN,
+                Command.YES_NO_START, Command.YES_NO_STOP, Command.NO_YES,
+                Command.NO_YES_NEWLINE, Command.NO_YES_RETURN, Command.NO_YES_START,
+                Command.NO_YES_STOP, Command.RESPAWN_TO, Command.AFTER_RESPAWN,
+                Command.AFTER_DAMAGE, Command.AFTER_ROBOTS
             });
+
+            // ACTION.UnionWith(new[]
+            // {
+            //     Command.MOVE_BOTTOM, Command.MOVE_LEFT, Command.MOVE_RIGHT, Command.MOVE_TOP,
+            //     Command.REPEAT, Command.MOVE_FORWARD, Command.DIR_BOTTOM, Command.DIR_TOP,
+            //     Command.DIR_LEFT, Command.DIR_RIGHT, Command.DIR_INV_BOTTOM, Command.DIR_INV_LEFT,
+            //     Command.DIR_INV_RIGHT, Command.DIR_INV_TOP, Command.DIR_RANDOM, Command.ROTATE_LEFT,
+            //     Command.ROTATE_RIGHT, Command.BUILD_BLOCK, Command.BUILD_QUADRO, Command.BUILD_ROAD,
+            //     Command.BUILD_WB, Command.GEO, Command.HEAL, Command.STD_BUILD, Command.STD_DIG,
+            //     Command.STD_DIG_AROUND, Command.STD_HEAL, Command.BOX_ALL, Command.BOX_BLUE,
+            //     Command.BOX_WHITE, Command.BOX_CYAN, Command.BOX_GREEN, Command.BOX_HALF,
+            //     Command.BOX_RED, Command.BOX_VIOLET, Command.USE_BOOM, Command.USE_C190,
+            //     Command.USE_GEOPACK, Command.USE_NANOBOT, Command.USE_POLIMER, Command.USE_PROTON,
+            //     Command.USE_RAZRYAD, Command.USE_REMBOT, Command.USE_ZZ
+            // });
 
             // UNION_GOTO.UnionWith(new[]
             // {   // TODO: доделать список переходов GOTO

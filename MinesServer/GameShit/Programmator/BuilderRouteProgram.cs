@@ -67,6 +67,11 @@ namespace MinesServer.GameShit.Programmator
             }
         }
         
+        public void AddEndStep()
+        {
+            Reset();
+            _steps.Add(new RouteStep { NextIndex = _startStepIndex });
+        }
         public int GetNextIndex()
         {
             if (!HasNext())

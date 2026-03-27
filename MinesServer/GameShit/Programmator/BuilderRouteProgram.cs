@@ -82,11 +82,33 @@ namespace MinesServer.GameShit.Programmator
                 ExternalMethod = externalMethod ?? (() => SetDeathStepIndex(gotoIndex))
             });
         }
-        public void FixStep(int it, int nextIndex)
-        {
+        public void FixStep(int it, int nextIndex, int type = 0)
+        {   // исправляет существующие шаги
+            var index = 0;
             if (it < _steps.Count())
             {
-                _steps[it] = new RouteStep { NextIndex = nextIndex };
+                switch (type)
+                {
+                    case 0:
+                        _steps[it] = new RouteStep { NextIndex = nextIndex };
+                        break;
+                    case 1: // Command.CALL_FUNC
+                        index = _steps[it].NextIndex;
+                        _steps[it] = new RouteStepWithMethod
+                            {
+                                NextIndex = index,
+                                ExternalMethod = (() => SetReturnStepIndex(nextIndex))
+                            };
+                        break;
+                    case 9: // Command.RESPAWN_TO
+                        index = _steps[it].NextIndex;
+                        _steps[it] = new RouteStepWithMethod
+                            {
+                                NextIndex = index,
+                                ExternalMethod = (() => SetDeathStepIndex(nextIndex))
+                            };
+                        break;
+                }
             }
         }
         

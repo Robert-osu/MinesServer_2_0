@@ -383,8 +383,7 @@ namespace MinesServer.GameShit.Programmator
                 Command.YES_NO, Command.YES_NO_NEWLINE, Command.YES_NO_RETURN,
                 Command.YES_NO_START, Command.YES_NO_STOP, Command.NO_YES,
                 Command.NO_YES_NEWLINE, Command.NO_YES_RETURN, Command.NO_YES_START,
-                Command.NO_YES_STOP, Command.RESPAWN_TO, Command.AFTER_RESPAWN,
-                Command.AFTER_DAMAGE, Command.AFTER_ROBOTS
+                Command.NO_YES_STOP, Command.RESPAWN_TO
             });
 
             // ACTION.UnionWith(new[]

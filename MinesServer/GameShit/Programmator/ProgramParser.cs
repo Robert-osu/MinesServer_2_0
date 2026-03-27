@@ -14,8 +14,6 @@ namespace MinesServer.GameShit.Programmator
         public Player owner { get; set; }
         private const int MaxActionsBytesSize = 4; // выделено 4 байта на определение количества команд (не изменять)
         private const int MaxActionsPerRow = 16; // максимальное количество команд в одной строке (не изменять)
-        private const int MaxRows = 12; // максимальное количество команд в одной строке (не изменять)
-        private const int MaxPages = 16; // максимальное количество страниц (не изменять)
         private RouteBuilder route = new();
         private int size;
         private byte[] actions;
@@ -55,24 +53,126 @@ namespace MinesServer.GameShit.Programmator
         }
         private void ParseRoute()
         {
-            for (int i = 0; i < this.actions.Count(); i++)
+            // создает route, добавляя шаги для каждого оператора
+            int col_index = 0;
+            int row_index = 0;
+            int next = 0;
+            string name = "";
+            Dictionary<int, string> dict_from = new Dictionary<int, string>();
+            Dictionary<string, int> dict_to = new Dictionary<string, int>(); // одинаковые метки перезаписываются
+            Dictionary<int, int> dict_type = new Dictionary<int, int>();
+
+            for (int i = 0; i < this.size; i++)
             {
                 Command cmd = (Command)this.actions[i];
+                
                 if (CommandExtensions.CONTROL_FLOW.Contains(cmd))
                 {
-                    
+                    switch (cmd)
+                    {
+                        case Command.NEWLINE:
+                            next = row_index * MaxActionsPerRow + MaxActionsPerRow; // начало некст строки
+                            setDefaultStep(next, 0);
+                            break;
+                        case Command.GO_TO:
+                            name = GetLabel(i);
+                            dict_from[i] = name;
+                            route.AddEndStep(); // заглушка - неверное имя ведет в точку старта
+                            break;
+                        case Command.START:
+                            next = i + 1;
+                            if (next < this.size && col_index + 1 < MaxActionsPerRow) // не конец проги и не конец строки
+                            {
+                                route.AddStartStep(next);
+                            }
+                            else
+                            {
+                                // зациклим на себе
+                                route.AddStartStep(i);
+                            }
+                            break;
+                        case Command.RETURN:
+                            route.AddReturnStep();
+                            break;
+                        case Command.RESPAWN_TO:
+                            name = GetLabel(i);
+                            dict_from[i] = name;
+                            dict_type[i] = 9;
+                            next = i + 1;
+                            setDefaultStep(next, col_index);
+                            break;
+                        case Command.CALL_FUNC:
+                        case Command.CALL_FUNC_CONDITION:
+                        case Command.CALL_FUNC_STATE:
+                            name = GetLabel(i);
+                            dict_from[i] = name;
+                            dict_type[i] = 1;
+                            next = i + 1;
+                            setDefaultStep(next, col_index); // заглушка - неверное имя ведет к пропуску процедуры
+                            break;
+                        case Command.RETURN_ARGUMENT:
+                            break;
+                        case Command.RETURN_STATE:
+                            break;
+                        case Command.YES_NO:
+                            break;
+                        case Command.YES_NO_NEWLINE:
+                            break;
+                        case Command.YES_NO_RETURN:
+                            break;
+                        case Command.YES_NO_START:
+                            break;
+                        case Command.YES_NO_STOP:
+                            break;
+                        case Command.NO_YES:
+                            break;
+                        case Command.NO_YES_NEWLINE:
+                            break;
+                        case Command.NO_YES_RETURN:
+                            break;
+                        case Command.NO_YES_START:
+                            break;
+                        case Command.NO_YES_STOP:
+                            break;
+                    }
                 }
                 else
                 {
-                    
+                    if (cmd == Command.LABEL)
+                    {
+                        name = GetLabel(i);
+                        dict_to[name] = i;
+                    }
+                    next = i + 1;
+                    setDefaultStep(next, col_index);
+                }
+
+                FixGoTo(dict_from, dict_to, dict_type);
+
+                col_index++;
+                if (col_index >= MaxActionsPerRow)
+                {
+                    col_index = 0;
+                    row_index++;
                 }
             }
         }
-        private void ParseRow()
-        {
-            
+        
+        private void FixGoTo(Dictionary<int, string> from, Dictionary<string, int> to, Dictionary<int, int> _type = null)
+        {   // правит переходы, не были заполнены сразу
+            int next = -1; // next может быть нулем
+            int type = 0; // default для простого шага
+            foreach (var pair in from)
+            {
+                next = to.ContainsKey(pair.Value) ? to[pair.Value] : -1;
+                
+                if (next >= 0)
+                {
+                    type = _type.ContainsKey(pair.Key) ? _type[pair.Key] : 0;
+                    route.FixStep(pair.Key, next, type);
+                } 
+            }
         }
-
 
         private byte[] GetBytesRange(byte[] array, int startByte, int endByte)
         {
@@ -91,6 +191,18 @@ namespace MinesServer.GameShit.Programmator
                 return parts[0]; // до @ или вся строка
         }
 
+        private void setDefaultStep(int next, int col_index)
+        {
+            if (next < this.size && col_index + 1 < MaxActionsPerRow) // не конец проги и не конец строки
+            {
+                route.AddStep(next);
+            }
+            else
+            {   // вернем в точку старта
+                route.AddEndStep();
+            }
+            
+        }
         
     }
 }

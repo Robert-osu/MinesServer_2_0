@@ -14,7 +14,7 @@ namespace MinesServer.GameShit.Programmator
             ProgRunning = false;
             entity = e;
         }
-        PEntity entity;
+        public PEntity entity;
         public int checkX;
         public int checkY;
         public int shiftX;
@@ -28,6 +28,7 @@ namespace MinesServer.GameShit.Programmator
 
         private void Drop()
         {
+            current_ind = 0; // delete
             startpoint = ("", 0);
             GotoDeath = null;
             cFunction = "";
@@ -51,6 +52,8 @@ namespace MinesServer.GameShit.Programmator
         private string cFunction;
         public Program? selected { get; set; }
 
+        public ProgramParser PP; // delete
+
         private PFunction current
         {
             get => currentprog[cFunction];
@@ -60,6 +63,8 @@ namespace MinesServer.GameShit.Programmator
         {
             selected = p;
             currentprog = p.programm;
+            PP = new ProgramParser(p.owner, p.name, p.data); // delete
+            
 
             // Логирование функций
             foreach (var i in currentprog)
@@ -122,22 +127,27 @@ namespace MinesServer.GameShit.Programmator
 
         private object? temp = null;
 
+        private int current_ind = 0;
+
         public void Step()
         {
-            if (current == null || ServerTime.Now < delay)
+            // if (current == null || ServerTime.Now < delay)
+            // {
+            //     return;
+            // }
+            if (ServerTime.Now < delay)
             {
                 return;
             }
 
-            PAction action;
-            if (current.actions.Count <= 0 || current.actions.Count - 1 < current.current)
-            {
-                current.Reset();
-                Next();
-                return;
-            }
-
-            action = current.Next;
+            // PAction action;
+            // if (current.actions.Count <= 0 || current.actions.Count - 1 < current.current)
+            // {
+            //     current.Reset();
+            //     Next();
+            //     return;
+            // }
+            var action = new PAction(CommandExtensions.GetActionType(PP.actions[current_ind]), PP.GetLabel(current_ind));
             object result = action.Execute(entity, ref temp)!;
 
             switch (result)
@@ -291,6 +301,8 @@ namespace MinesServer.GameShit.Programmator
                     }
                     break;
             }
+
+            current_ind = PP.route.GetNextIndex();
 
             //IncreaseDelay(action.delay);
         }

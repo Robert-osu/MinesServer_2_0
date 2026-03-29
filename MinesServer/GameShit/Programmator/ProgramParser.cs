@@ -14,11 +14,10 @@ namespace MinesServer.GameShit.Programmator
         public Player owner { get; set; }
         private const int MaxActionsBytesSize = 4; // выделено 4 байта на определение количества команд (не изменять)
         private const int MaxActionsPerRow = 16; // максимальное количество команд в одной строке (не изменять)
-        private RouteBuilder route = new();
-        private int size;
-        private byte[] actions;
-        private string[] labels;
-        private HashSet<int> processedIndexes = new();
+        public RouteBuilder route = new();
+        public int size;
+        public byte[] actions;
+        public string[] labels;
         public ProgramParser(Player P, string name, string data)
         {
             this.owner = P;
@@ -26,6 +25,7 @@ namespace MinesServer.GameShit.Programmator
             this.data = data;
 
             ParseData();
+            ParseRoute();
         }
 
         private void ParseData()
@@ -62,92 +62,89 @@ namespace MinesServer.GameShit.Programmator
             Dictionary<string, int> dict_to = new Dictionary<string, int>(); // одинаковые метки перезаписываются
             Dictionary<int, int> dict_type = new Dictionary<int, int>();
 
+
             for (int i = 0; i < this.size; i++)
             {
                 Command cmd = (Command)this.actions[i];
                 
-                if (CommandExtensions.CONTROL_FLOW.Contains(cmd))
+                switch (cmd)
                 {
-                    switch (cmd)
-                    {
-                        case Command.NEWLINE:
-                            next = row_index * MaxActionsPerRow + MaxActionsPerRow; // начало некст строки
-                            setDefaultStep(next, 0);
-                            break;
-                        case Command.GO_TO:
-                            name = GetLabel(i);
-                            dict_from[i] = name;
-                            route.AddEndStep(); // заглушка - неверное имя ведет в точку старта
-                            break;
-                        case Command.START:
-                            next = i + 1;
-                            if (next < this.size && col_index + 1 < MaxActionsPerRow) // не конец проги и не конец строки
-                            {
-                                route.AddStartStep(next);
-                            }
-                            else
-                            {
-                                // зациклим на себе
-                                route.AddStartStep(i);
-                            }
-                            break;
-                        case Command.RETURN:
-                            route.AddReturnStep();
-                            break;
-                        case Command.RESPAWN_TO:
-                            name = GetLabel(i);
-                            dict_from[i] = name;
-                            dict_type[i] = 9;
-                            next = i + 1;
-                            setDefaultStep(next, col_index);
-                            break;
-                        case Command.CALL_FUNC:
-                        case Command.CALL_FUNC_CONDITION:
-                        case Command.CALL_FUNC_STATE:
-                            name = GetLabel(i);
-                            dict_from[i] = name;
-                            dict_type[i] = 1;
-                            next = i + 1;
-                            setDefaultStep(next, col_index); // заглушка - неверное имя ведет к пропуску процедуры
-                            break;
-                        case Command.RETURN_ARGUMENT:
-                            break;
-                        case Command.RETURN_STATE:
-                            break;
-                        case Command.YES_NO:
-                            break;
-                        case Command.YES_NO_NEWLINE:
-                            break;
-                        case Command.YES_NO_RETURN:
-                            break;
-                        case Command.YES_NO_START:
-                            break;
-                        case Command.YES_NO_STOP:
-                            break;
-                        case Command.NO_YES:
-                            break;
-                        case Command.NO_YES_NEWLINE:
-                            break;
-                        case Command.NO_YES_RETURN:
-                            break;
-                        case Command.NO_YES_START:
-                            break;
-                        case Command.NO_YES_STOP:
-                            break;
-                    }
-                }
-                else
-                {
-                    if (cmd == Command.LABEL)
-                    {
+                    case Command.NEWLINE:
+                        next = row_index * MaxActionsPerRow + MaxActionsPerRow; // начало некст строки
+                        setDefaultStep(next, 0);
+                        break;
+                    case Command.GO_TO:
                         name = GetLabel(i);
-                        dict_to[name] = i;
-                    }
-                    next = i + 1;
-                    setDefaultStep(next, col_index);
+                        dict_from[i] = name;
+                        route.AddEndStep(); // заглушка - неверное имя ведет в точку старта
+                        break;
+                    case Command.START:
+                        next = i + 1;
+                        if (next < this.size && col_index + 1 < MaxActionsPerRow) // не конец проги и не конец строки
+                        {
+                            route.AddStartStep(next);
+                        }
+                        else
+                        {
+                            // зациклим на себе
+                            route.AddStartStep(i);
+                        }
+                        break;
+                    case Command.RETURN:
+                        route.AddReturnStep(); // TODO
+                        break;
+                    case Command.RESPAWN_TO:
+                        name = GetLabel(i);
+                        dict_from[i] = name;
+                        dict_type[i] = 9;
+                        next = i + 1;
+                        setDefaultStep(next, col_index);
+                        break;
+                    case Command.CALL_FUNC:
+                    case Command.CALL_FUNC_CONDITION:
+                    case Command.CALL_FUNC_STATE:
+                        name = GetLabel(i);
+                        dict_from[i] = name;
+                        dict_type[i] = 1;
+                        next = i + 1;
+                        setDefaultStep(next, col_index); // заглушка - неверное имя ведет к пропуску процедуры
+                        break;
+                    case Command.RETURN_ARGUMENT:
+                        route.AddReturnStep(); // TODO
+                        break;
+                    case Command.RETURN_STATE:
+                        route.AddReturnStep(); // TODO
+                        break;
+                    case Command.YES_NO:
+                        break;
+                    case Command.YES_NO_NEWLINE:
+                        break;
+                    case Command.YES_NO_RETURN:
+                        break;
+                    case Command.YES_NO_START:
+                        break;
+                    case Command.YES_NO_STOP:
+                        break;
+                    case Command.NO_YES:
+                        break;
+                    case Command.NO_YES_NEWLINE:
+                        break;
+                    case Command.NO_YES_RETURN:
+                        break;
+                    case Command.NO_YES_START:
+                        break;
+                    case Command.NO_YES_STOP:
+                        break;
+                    default:
+                        if (cmd == Command.LABEL)
+                        {
+                            name = GetLabel(i);
+                            dict_to[name] = i;
+                        }
+                        next = i + 1;
+                        setDefaultStep(next, col_index);
+                        break;
                 }
-
-                FixGoTo(dict_from, dict_to, dict_type);
 
                 col_index++;
                 if (col_index >= MaxActionsPerRow)
@@ -156,6 +153,9 @@ namespace MinesServer.GameShit.Programmator
                     row_index++;
                 }
             }
+
+
+            FixGoTo(dict_from, dict_to, dict_type);
         }
         
         private void FixGoTo(Dictionary<int, string> from, Dictionary<string, int> to, Dictionary<int, int> _type = null)
@@ -181,8 +181,12 @@ namespace MinesServer.GameShit.Programmator
             Array.Copy(array, startByte, result, 0, length);
             return result;
         }
-        private string GetLabel(int index, bool isSecondLabel = false)
+        public string GetLabel(int index, bool isSecondLabel = false)
         { // до 100к операций пофиг
+            if (index >= this.labels.Count())
+            {
+                return "0";
+            }
             var parts = this.labels[index]?.Split('@') ?? new[] { "0" };
 
             if (isSecondLabel && parts.Length > 1)

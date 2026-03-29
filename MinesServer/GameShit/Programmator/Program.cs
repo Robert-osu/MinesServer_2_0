@@ -11,6 +11,7 @@ namespace MinesServer.GameShit.Programmator
     {
         private const int MaxActionsBytesSize = 4; // выделено 4 байта на определение количества команд (не изменять)
         private const int MaxActionsPerRow = 16; // максимальное количество команд в одной строке (не изменять)
+        public RouteBuilder route = new();
         private Program()
         {
 
@@ -34,6 +35,8 @@ namespace MinesServer.GameShit.Programmator
         }
         private Dictionary<string,PFunction> parseNormal()
         {
+            bool isStart = false;
+
             Dictionary<string, PFunction> functions = new();
             functions[""] = new PFunction();
             string name_current_f = "";
@@ -41,9 +44,19 @@ namespace MinesServer.GameShit.Programmator
             byte[] array = SevenZipHelper.Decompress(Convert.FromBase64String(data)); // наша программа в виде массива байтов
             int commands_size = BitConverter.ToInt32(array, 0); // количество команд в программе
 
+            // actions_array - содержит массив команд
+            var start_byte = MaxActionsBytesSize; // сдвиг
+            var end_byte = commands_size + start_byte;
+            byte[] actions_array = GetBytesRange(array, start_byte, end_byte);
+
+            for (int i = 0; i < commands_size; i++)
+            {
+                Console.Write(actions_array[i]);
+            }
+
             // labels_array - содержит массив значений команд, либо два значения, если передаются как "WWW@10"
-            var start_byte = commands_size + MaxActionsBytesSize; // сдвиг
-            var end_byte = array.Length - start_byte;
+            start_byte = commands_size + MaxActionsBytesSize; // сдвиг
+            end_byte = array.Length - start_byte;
             var labels_array = Encoding.UTF8.GetString(array, start_byte, end_byte).Split(':');
 
             bool have_next_row = false; // есть ли переход на новую строку
@@ -69,31 +82,52 @@ namespace MinesServer.GameShit.Programmator
                         label_name = labels_array[i];
                 }
 
-                
-
-                
-
                 if (CommandExtensions.NO_ARGS.Contains(action_type))
                 {
-                    if (action_type == Command.EMPTY)
-                    {
-                        i_column++;
-                        continue;
-                    }
-                    // Обработка NextRow до добавления команды
-                    if (action_type == Command.NEWLINE)
-                    {
-                        have_next_row = true;
-                        // Сбрасываем счетчик строки
-                        i_column = 0;
-                        continue; // Пропускаем добавление команды
-                    }
 
-                    functions[name_current_f] += new PAction(atype);
+
+                    switch (action_type)
+                    {
+                        case Command.EMPTY:
+                            i_column++;
+                            continue;
+                        case Command.NEWLINE:
+                            Console.Write("newline");
+                            have_next_row = true;
+                            // Сбрасываем счетчик строки
+                            i_column = 0;
+                            continue; // Пропускаем добавление команды
+                        case Command.START:
+                            isStart = true;
+                            continue;
+                        default:
+                            if (CommandExtensions.CONDITIONS.Contains(action_type) ||
+                                CommandExtensions.OFFSETS.Contains(action_type) ||
+                                CommandExtensions.CHECKS.Contains(action_type))
+                            {
+                                continue;
+                            }
+                            else if (CommandExtensions.ACTIONS.Contains(action_type))
+                            {
+                                if(isStart)
+                                {
+                                    route.AddStartStep(i);
+                                    isStart = false;
+                                }
+                                else
+                                {
+                                    route.AddStep(i);
+                                }
+                                Console.Write("+");
+                                functions[name_current_f] += new PAction(atype);
+                            }
+                            break;
+
+                    }
                 } 
                 else if (CommandExtensions.ONE_ARGS.Contains(action_type))
                 {
-                    if (CommandExtensions.UNION_GOTO.Contains(action_type))
+                    if (action_type == Command.GO_TO)
                     {
                         // TODO: логика перехода GOTO
                     }
@@ -122,6 +156,7 @@ namespace MinesServer.GameShit.Programmator
                     }
                     else
                     {
+                        Console.Write("end");
                         return functions;
                     }
                     i_column = 0;
@@ -129,7 +164,14 @@ namespace MinesServer.GameShit.Programmator
             }
             return functions;
         }
-        private static ActionType GetActionType(int id)
+        byte[] GetBytesRange(byte[] array, int startByte, int endByte)
+        {
+            int length = endByte - startByte;
+            byte[] result = new byte[length];
+            Array.Copy(array, startByte, result, 0, length);
+            return result;
+        }
+        public static ActionType GetActionType(int id)
         {
             return id switch
             {

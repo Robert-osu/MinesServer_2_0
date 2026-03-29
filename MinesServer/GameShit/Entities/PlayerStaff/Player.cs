@@ -672,9 +672,11 @@ namespace MinesServer.GameShit.Entities.PlayerStaff
         }
 
         public void ProgrammatorUpdate()
-        {
+        {   
             if (programsData.ProgRunning)
+            {
                 programsData.Step();
+            }
         }
 
         #endregion

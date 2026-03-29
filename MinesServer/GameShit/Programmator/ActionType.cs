@@ -445,8 +445,123 @@ namespace MinesServer.GameShit.Programmator
             }
             throw new ArgumentOutOfRangeException(nameof(index), "Индекс вне диапазона");
         }
+        public static ActionType GetActionType(int id)
+        {
+            return id switch
+            {
+                0 => ActionType.None,
+                1 => ActionType.NextRow,
+                2 => ActionType.Start,
+                3 => ActionType.Stop,
+                4 => ActionType.MoveUp,
+                5 => ActionType.MoveLeft,
+                6 => ActionType.MoveDown,
+                7 => ActionType.MoveRight,
+                8 => ActionType.Dig,
+                9 => ActionType.RotateUp,
+                10 => ActionType.RotateLeft,
+                11 => ActionType.RotateDown,
+                12 => ActionType.RotateRight,
+                13 => ActionType.Last,                    // LAST
+                14 => ActionType.MoveForward,
+                15 => ActionType.RotateLeftRelative,
+                16 => ActionType.RotateRightRelative,
+                17 => ActionType.BuildBlock,
+                18 => ActionType.Geology,
+                19 => ActionType.BuildRoad,
+                20 => ActionType.Heal,
+                21 => ActionType.BuildPillar,
+                22 => ActionType.RotateRandom,
+                23 => ActionType.Beep,
+                24 => ActionType.GoTo,
+                25 => ActionType.RunSub,
+                26 => ActionType.RunFunction,
+                27 => ActionType.Return,
+                28 => ActionType.ReturnFunction,
+                29 => ActionType.CheckUpLeft,
+                30 => ActionType.CheckDownRight,
+                31 => ActionType.CheckUp,
+                32 => ActionType.CheckUpRight,
+                33 => ActionType.CheckLeft,
+                35 => ActionType.CheckRight,
+                36 => ActionType.CheckDownLeft,
+                37 => ActionType.CheckDown,
+                38 => ActionType.Or,
+                39 => ActionType.And,
+                40 => ActionType.CreateFunction,
+                43 => ActionType.IsNotEmpty,
+                44 => ActionType.IsEmpty,
+                45 => ActionType.IsFalling,
+                46 => ActionType.IsCrystal,
+                47 => ActionType.IsLivingCrystal,
+                48 => ActionType.IsBoulder,
+                49 => ActionType.IsSand,
+                50 => ActionType.IsBreakableRock,
+                51 => ActionType.IsUnbreakable,
+                52 => ActionType.IsRedRock,
+                53 => ActionType.IsBlackRock,
+                54 => ActionType.IsAcid,
+                57 => ActionType.IsQuadBlock,
+                58 => ActionType.IsRoad,
+                59 => ActionType.IsRedBlock,
+                60 => ActionType.IsYellowBlock,
+                74 => ActionType.IsBox,
+                76 => ActionType.IsPillar,
+                77 => ActionType.IsGreenBlock,
+                119 => ActionType.WritableStateMore,
+                120 => ActionType.WritableStateLower,
+                123 => ActionType.WritableState,
+                131 => ActionType.ShiftUp,
+                132 => ActionType.ShiftLeft,
+                133 => ActionType.ShiftDown,
+                134 => ActionType.ShiftRight,
+                135 => ActionType.CheckForward,
+                136 => ActionType.ShiftForward,
+                137 => ActionType.RunState,
+                138 => ActionType.ReturnState,
+                139 => ActionType.RunIfFalse,
+                140 => ActionType.RunIfTrue,
+                141 => ActionType.MacrosDig,
+                142 => ActionType.MacrosBuild,
+                143 => ActionType.MacrosHeal,
+                144 => ActionType.Flip,
+                145 => ActionType.MacrosMine,
+                146 => ActionType.CheckGun,
+                147 => ActionType.FillGun,
+                148 => ActionType.IsHpLower100,
+                149 => ActionType.IsHpLower50,
+                156 => ActionType.CheckForwardLeft,
+                157 => ActionType.CheckForwardRight,
+                158 => ActionType.EnableAutoDig,
+                159 => ActionType.DisableAutoDig,
+                160 => ActionType.EnableAgression,
+                161 => ActionType.DisableAgression,
+                162 => ActionType.BOOM,                    // ACTION_BOOM
+                163 => ActionType.DISCHARGE,               // ACTION_DISCHARGE
+                164 => ActionType.PROTON,                  // ACTION_PROTON
+                165 => ActionType.VB,                      // ACTION_WB
+                166 => ActionType.RunOnRespawn,
+                167 => ActionType.Geopack,                  // ACTION_GEOPACK
+                168 => ActionType.ZZ,                       // ACTION_ZZ
+                169 => ActionType.C190,                     // ACTION_C190
+                170 => ActionType.Poly,                      // ACTION_POLY
+                171 => ActionType.Up,                        // ACTION_UP
+                172 => ActionType.Craft,                     // ACTION_CRAFT
+                173 => ActionType.Nano,                      // ACTION_NANO
+                174 => ActionType.Rembot,                    // ACTION_REMBOT
+                175 => ActionType.InvDirUp,                  // INVDIR_W
+                176 => ActionType.InvDirLeft,                // INVDIR_A
+                177 => ActionType.InvDirDown,                // INVDIR_S
+                178 => ActionType.InvDirRight,               // INVDIR_D
+                179 => ActionType.EnableHandMode,            // HANDMODE_ON
+                180 => ActionType.DisableHandMode,           // HANDMODE_OFF
+                181 => ActionType.DebugBreak,                // DEBUG_BREAK
+                182 => ActionType.DebugSet,                  // DEBUG_SET
+                200 => ActionType.Restart,                    // RESTART
+                _ => ActionType.None
+            };
+        }
     }
-
 }
 
 

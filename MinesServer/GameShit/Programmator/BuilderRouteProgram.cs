@@ -77,7 +77,7 @@ namespace MinesServer.GameShit.Programmator
         
         public void AddReturnStep(int index)
         {
-            dict_step.Add(index, new RouteStepUpdate { ExternalMethod = (() => _returnPoints.Pop()) });
+            dict_step.Add(index, new RouteStepUpdate { ExternalMethod = (() => _returnPoints?.TryPop(out var result) == true ? result : default) });
             Log($"↩️ Добавлен шаг возврата: возвращаемся к индексу {getReturnIndex()} (стек возврата: {_returnPoints.Count} элементов)");
             
         }

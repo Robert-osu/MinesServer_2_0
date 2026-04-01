@@ -419,6 +419,9 @@ namespace MinesServer.GameShit.Programmator
             }
 
             Console.WriteLine($"[DEBUG] Recursive call: next={next}, row={i_row}, col={i_col}, start={i_start}");
+
+            i_row = next / MaxActionsPerRow;
+            i_col = next % MaxActionsPerRow;
             CommandsConnector(next, visited, i_col, i_row, i_start); // следующий вызов
 
             if (!visited.Contains(goto_index))

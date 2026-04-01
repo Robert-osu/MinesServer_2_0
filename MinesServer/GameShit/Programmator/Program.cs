@@ -92,7 +92,6 @@ namespace MinesServer.GameShit.Programmator
                             i_column++;
                             continue;
                         case Command.NEWLINE:
-                            Console.Write("newline");
                             have_next_row = true;
                             // Сбрасываем счетчик строки
                             i_column = 0;
@@ -111,12 +110,10 @@ namespace MinesServer.GameShit.Programmator
                             {
                                 if(isStart)
                                 {
-                                    route.AddStartStep(i);
                                     isStart = false;
                                 }
                                 else
                                 {
-                                    route.AddStep(i);
                                 }
                                 Console.Write("+");
                                 functions[name_current_f] += new PAction(atype);

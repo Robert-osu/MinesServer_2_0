@@ -445,6 +445,11 @@ namespace MinesServer.GameShit.Programmator
             }
             throw new ArgumentOutOfRangeException(nameof(index), "Индекс вне диапазона");
         }
+        public static HashSet<byte> ToByteHashSet<TEnum>(this IEnumerable<TEnum> enums) 
+            where TEnum : Enum
+        {
+            return new HashSet<byte>(enums.Select(e => Convert.ToByte(e)));
+        }
         public static ActionType GetActionType(int id)
         {
             return id switch

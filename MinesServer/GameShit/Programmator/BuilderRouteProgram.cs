@@ -19,9 +19,11 @@ namespace MinesServer.GameShit.Programmator
         private Dictionary<int, RouteStep> dict_step = new();
         private int _currentStepIndex = 0;  // Текущий шаг в маршруте
         private int _lastReturnedIndex = -1; // Последний возвращенный индекс
+        private int _travelIndex = -1; // index для прыжков через бесполезные операторы
         private int _startStepIndex = 0;
 
         private int _deathStepIndex = -1;
+        public bool _isFirstStep = true;
         private Stack<int> _returnPoints = new Stack<int>(); // Стек точек возврата из индексов шагов
         
         // Логирование
@@ -38,14 +40,53 @@ namespace MinesServer.GameShit.Programmator
             _enableLogging = enableLogging;
         }
 
+        public void AddTravel(int index)
+        {   // принимает индекс последнего шага
+            if (_travelIndex == -1 && !_isFirstStep)
+            {
+                _travelIndex = index;
+            }
+        }
+
+        public void FixTravel(int index)
+        {
+            dict_step[_travelIndex].NextIndex = index;
+            _travelIndex = -1;
+
+            Log($"Исправили переход: {_travelIndex} -> {index}");
+        }
+
         public void AddStep(int index, int nextIndex)
         {
+            if (_travelIndex != -1)
+            {
+                FixTravel(index);
+            }
+            else if (_isFirstStep)
+            {
+                Log($"НАЧАЛО ЗДЕСЬ: {index}");
+                
+                _currentStepIndex = index;
+                _startStepIndex = index;
+                _isFirstStep = false;
+            }
             dict_step.Add(index, new RouteStep { NextIndex = nextIndex });
             Log($"Добавлен обычный шаг: переход к индексу {nextIndex}");
         }
         
         public void AddConditionalStep(int index, Func<bool> condition, int trueIndex, int falseIndex)
         {
+            if (_travelIndex != -1)
+            {
+                FixTravel(index);
+            }
+            else if (_isFirstStep)
+            {
+                Log($"НАЧАЛО ЗДЕСЬ: {index}");
+                _currentStepIndex = index;
+                _startStepIndex = index;
+                _isFirstStep = false;
+            }
             dict_step.Add(index, new ConditionalRouteStep
             {
                 Condition = condition,
@@ -57,6 +98,17 @@ namespace MinesServer.GameShit.Programmator
         
         public void AddStartStep(int index, int nextIndex, Action externalMethod = null)
         {
+            if (_travelIndex != -1)
+            {
+                FixTravel(index);
+            }
+            else if (_isFirstStep)
+            {
+                Log($"НАЧАЛО ЗДЕСЬ: {index}");
+                _currentStepIndex = index;
+                _startStepIndex = index;
+                _isFirstStep = false;
+            }
             dict_step.Add(index, new RouteStepWithMethod
             {
                 NextIndex = nextIndex,
@@ -67,6 +119,17 @@ namespace MinesServer.GameShit.Programmator
         
         public void AddRecursiveStep(int index, int nextIndex, int gotoIndex, Action externalMethod = null)
         {
+            if (_travelIndex != -1)
+            {
+                FixTravel(index);
+            }
+            else if (_isFirstStep)
+            {
+                Log($"НАЧАЛО ЗДЕСЬ: {index}");
+                _currentStepIndex = index;
+                _startStepIndex = index;
+                _isFirstStep = false;
+            }
             dict_step.Add(index, new RouteStepWithMethod
             {
                 NextIndex = gotoIndex,
@@ -77,6 +140,17 @@ namespace MinesServer.GameShit.Programmator
         
         public void AddReturnStep(int index)
         {
+            if (_travelIndex != -1)
+            {
+                FixTravel(index);
+            }
+            else if (_isFirstStep)
+            {
+                Log($"НАЧАЛО ЗДЕСЬ: {index}");
+                _currentStepIndex = index;
+                _startStepIndex = index;
+                _isFirstStep = false;
+            }
             dict_step.Add(index, new RouteStepUpdate { ExternalMethod = (() => _returnPoints?.TryPop(out var result) == true ? result : default) });
             Log($"↩️ Добавлен шаг возврата: возвращаемся к индексу {getReturnIndex()} (стек возврата: {_returnPoints.Count} элементов)");
             
@@ -84,18 +158,61 @@ namespace MinesServer.GameShit.Programmator
         
         public void AddEndStep(int index)
         {
+            if (_travelIndex != -1)
+            {
+                FixTravel(index);
+            }
+            else if (_isFirstStep)
+            {
+                Log($"НАЧАЛО ЗДЕСЬ: {index}");
+                _currentStepIndex = index;
+                _startStepIndex = index;
+                _isFirstStep = false;
+            }
             dict_step.Add(index, new RouteStepUpdate { ExternalMethod = (() => _startStepIndex) });
             Log($"🏁 Добавлен конечный шаг: возврат к стартовому индексу {_startStepIndex}");
         }
         
         public void AddDeathStep(int index, int nextIndex, int gotoIndex, Action externalMethod = null)
         {
+            if (_travelIndex != -1)
+            {
+                FixTravel(index);
+            }
+            else if (_isFirstStep)
+            {
+                Log($"НАЧАЛО ЗДЕСЬ: {index}");
+                _currentStepIndex = index;
+                _startStepIndex = index;
+                _isFirstStep = false;
+            }
             dict_step.Add(index, new RouteStepWithMethod
             {
                 NextIndex = nextIndex,
                 ExternalMethod = externalMethod ?? (() => SetDeathStepIndex(gotoIndex))
             });
             Log($"💀 Добавлен шаг смерти: при достижении индекса {nextIndex} активируется точка возрождения {gotoIndex}");
+        }
+
+        public void AddBreak(int index, int startIndex)
+        {
+            if (_travelIndex != -1)
+            {
+                FixTravel(startIndex);
+            }
+            else if (_isFirstStep)
+            {
+                Log($"НАЧАЛО ЗДЕСЬ: {index}");
+                _currentStepIndex = index;
+                _startStepIndex = index;
+                _isFirstStep = false;
+
+                this.AddStep(index, index); // зациклили
+            }
+            else
+            {
+                dict_step[index].NextIndex = startIndex;
+            }
         }
         
         public void FixStep(int it, int nextIndex, int type = 0)
@@ -137,10 +254,9 @@ namespace MinesServer.GameShit.Programmator
         
         public int GetNextIndex()
         {
-                
             var step = dict_step[_currentStepIndex];
             int nextIndex = step.GetNextIndex();
-            _lastReturnedIndex = nextIndex;
+            _lastReturnedIndex = _currentStepIndex;
             
             // Логируем информацию о переходе
             string stepType = step.GetType().Name;
@@ -160,7 +276,7 @@ namespace MinesServer.GameShit.Programmator
             
             _currentStepIndex = nextIndex;
             
-            return nextIndex;
+            return _lastReturnedIndex;
         }
         
         public void Reset()
@@ -187,16 +303,6 @@ namespace MinesServer.GameShit.Programmator
             return _returnPoints?.TryPeek(out var result) == true ? result : default;
         }
         
-        private bool HasNext()
-        {
-            // Проверяем, остались ли еще шаги в маршруте
-            bool hasNext = _currentStepIndex < dict_step.Count;
-            if (!hasNext && _enableLogging)
-            {
-                Log($"📌 Маршрут завершен (шагов: {dict_step.Count})");
-            }
-            return hasNext;
-        }
 
         private void SetStartStepIndex(int nextIndex)
         {
@@ -224,31 +330,6 @@ namespace MinesServer.GameShit.Programmator
             }
         }
         
-        
-        public List<int> BuildRoute()
-        {
-            Log("🚀 НАЧАЛО ПОСТРОЕНИЯ МАРШРУТА");
-            var route = new List<int>();
-            Reset();
-            
-            int stepCounter = 0;
-            while (HasNext())
-            {
-                int nextIndex = GetNextIndex();
-                route.Add(nextIndex);
-                stepCounter++;
-                
-                // Защита от бесконечного цикла
-                if (stepCounter > dict_step.Count * 10)
-                {
-                    Log($"⚠️ ПРЕРЫВАНИЕ: достигнут лимит шагов ({stepCounter}), возможно зацикливание");
-                    break;
-                }
-            }
-            
-            Log($"✅ ПОСТРОЕНИЕ ЗАВЕРШЕНО: выполнено {route.Count} шагов");
-            return route;
-        }
         
         private class RouteStep
         {

@@ -202,10 +202,11 @@ namespace MinesServer.GameShit.Programmator
             var i_col = 0;
             var i_row = 0;
             var i_start = 0;
-            CommandsConnector(i_current, visited, i_col, i_row, i_start);
+            var last_index = 0;
+            CommandsConnector(i_current, visited, i_col, i_row, i_start, last_index);
         }
 
-        private void CommandsConnector(int index, HashSet<int> visited, int i_col, int i_row, int i_start)
+        private void CommandsConnector(int index, HashSet<int> visited, int i_col, int i_row, int i_start, int last_index)
         {   // рекурсивно обходит рабочие операторы программы
             
             Console.WriteLine($"[DEBUG] Entering CommandsConnector: index={index}, row={i_row}, col={i_col}, start={i_start}");
@@ -225,12 +226,31 @@ namespace MinesServer.GameShit.Programmator
             string name = "";
             Command cmd = (Command)this.actions[index];
             next = index + 1;
+
+            if (route._isFirstStep)
+            {
+                i_start = index;
+            }
             
             Console.WriteLine($"[DEBUG] Processing command: {cmd} at index {index}");
             
             switch (cmd)
             {
+                case Command.EMPTY:
+                    if (next < this.size && i_col + 1 < MaxActionsPerRow) // не конец проги и не конец строки
+                    {
+                        route.AddTravel(last_index);
+                        Console.WriteLine($"[DEBUG] {cmd}: passed step {index} -> {next}");
+                    }
+                    else
+                    {
+                        route.AddBreak(index, i_start);
+                        next = i_start;
+                        Console.WriteLine($"[DEBUG] {cmd}: end of line, returning to start {i_start}");
+                    }
+                    break;
                 case Command.NEWLINE:
+                    route.AddTravel(last_index);
                     Console.WriteLine($"[DEBUG] NEWLINE: jumping to next row start");
                     next = i_row * MaxActionsPerRow + MaxActionsPerRow; // начало некст строки
                     if (next < this.size) // не конец проги и не конец строки
@@ -246,6 +266,7 @@ namespace MinesServer.GameShit.Programmator
                     }
                     break;
                 case Command.GO_TO:
+                    route.AddTravel(last_index);
                     name = GetLabel(index);
                     Console.WriteLine($"[DEBUG] GO_TO: looking for label '{name}'");
                     if (dict_to.TryGetValue(name, out next))
@@ -261,6 +282,7 @@ namespace MinesServer.GameShit.Programmator
                     }
                     break;
                 case Command.START:
+                    route.AddTravel(last_index);
                     Console.WriteLine($"[DEBUG] START: setting start point");
                     if (next < this.size && i_col + 1 < MaxActionsPerRow) // не конец проги и не конец строки
                     {
@@ -278,6 +300,7 @@ namespace MinesServer.GameShit.Programmator
                     }
                     break;
                 case Command.RESPAWN_TO:
+                    route.AddTravel(last_index);
                     name = GetLabel(index);
                     Console.WriteLine($"[DEBUG] RESPAWN_TO: looking for label '{name}'");
                     if (dict_to.TryGetValue(name, out goto_index))
@@ -313,6 +336,7 @@ namespace MinesServer.GameShit.Programmator
                 case Command.CALL_FUNC:
                 case Command.CALL_FUNC_CONDITION:
                 case Command.CALL_FUNC_STATE:
+                    route.AddTravel(last_index);
                     name = GetLabel(index);
                     Console.WriteLine($"[DEBUG] {cmd}: calling function '{name}'");
                     if (dict_to.TryGetValue(name, out goto_index))
@@ -348,12 +372,14 @@ namespace MinesServer.GameShit.Programmator
                 case Command.RETURN:
                 case Command.RETURN_ARGUMENT:
                 case Command.RETURN_STATE:
+                    route.AddTravel(last_index);
                     next = route.getReturnIndex();
                     route.AddReturnStep(index); // TODO
                     Console.WriteLine($"[DEBUG] {cmd}: added return step, returning to index {next}");
                     break;
                 case Command.YES_NO:
                 case Command.NO_YES:
+                    route.AddTravel(last_index);
                     name = GetLabel(index);
                     Console.WriteLine($"[DEBUG] {cmd}: conditional with label '{name}'");
                     if (dict_to.TryGetValue(name, out goto_index))
@@ -407,6 +433,7 @@ namespace MinesServer.GameShit.Programmator
                         next = i_start;
                         Console.WriteLine($"[DEBUG] {cmd}: end of line, returning to start {i_start}");
                     }
+                    last_index = index;
                     break;
             }
 
@@ -422,14 +449,14 @@ namespace MinesServer.GameShit.Programmator
 
             i_row = next / MaxActionsPerRow;
             i_col = next % MaxActionsPerRow;
-            CommandsConnector(next, visited, i_col, i_row, i_start); // следующий вызов
+            CommandsConnector(next, visited, i_col, i_row, i_start, last_index); // следующий вызов
 
             if (!visited.Contains(goto_index))
             {
                 // Определение строки и колонки по индексу
                 i_row = goto_index / MaxActionsPerRow;
                 i_col = goto_index % MaxActionsPerRow;
-                CommandsConnector(goto_index, visited, i_col, i_row, i_start); // ответвление
+                CommandsConnector(goto_index, visited, i_col, i_row, i_start, last_index); // ответвление
             }
         }
 

@@ -147,8 +147,10 @@ namespace MinesServer.GameShit.Programmator
             //     Next();
             //     return;
             // }
+
+            current_ind = PP.route.GetNextIndex();
             var action = new PAction(CommandExtensions.GetActionType(PP.actions[current_ind]), PP.GetLabel(current_ind));
-            object result = action.Execute(entity, ref temp)!;
+            object result = action.Execute(entity, ref temp);
 
             switch (result)
             {
@@ -301,8 +303,6 @@ namespace MinesServer.GameShit.Programmator
                     }
                     break;
             }
-
-            current_ind = PP.route.GetNextIndex();
 
             //IncreaseDelay(action.delay);
         }
